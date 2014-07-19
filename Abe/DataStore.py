@@ -26,15 +26,15 @@ import re
 import errno
 import logging
 
-import SqlAbstraction
+from . import SqlAbstraction
 
-import Chain
+from . import Chain
 
 # bitcointools -- modified deserialize.py to return raw transaction
-import BCDataStream
-import deserialize
-import util
-import base58
+from . import BCDataStream
+from . import deserialize
+from . import util
+from . import base58
 
 SCHEMA_TYPE = "Abe"
 SCHEMA_VERSION = SCHEMA_TYPE + "39"
@@ -63,21 +63,22 @@ CHAIN_CONFIG = [
     {"chain":"Bitcoin"},
     {"chain":"Testnet"},
     {"chain":"Namecoin"},
-    {"chain":"Weeds", "policy":"Sha256Chain",
-     "code3":"WDS", "address_version":"\xf3", "magic":"\xf8\xbf\xb5\xda"},
-    {"chain":"BeerTokens", "policy":"Sha256Chain",
-     "code3":"BER", "address_version":"\xf2", "magic":"\xf7\xbf\xb5\xdb"},
-    {"chain":"SolidCoin", "policy":"Sha256Chain",
-     "code3":"SCN", "address_version":"\x7d", "magic":"\xde\xad\xba\xbe"},
-    {"chain":"ScTestnet", "policy":"Sha256Chain",
-     "code3":"SC0", "address_version":"\x6f", "magic":"\xca\xfe\xba\xbe"},
-    {"chain":"Worldcoin", "policy":"Sha256Chain",
-     "code3":"WDC", "address_version":"\x49", "magic":"\xfb\xc0\xb6\xdb"},
+    # {"chain":"Weeds", "policy":"Sha256Chain",
+    #  "code3":"WDS", "address_version":"\xf3", "magic":"\xf8\xbf\xb5\xda"},
+    # {"chain":"BeerTokens", "policy":"Sha256Chain",
+    #  "code3":"BER", "address_version":"\xf2", "magic":"\xf7\xbf\xb5\xdb"},
+    # {"chain":"SolidCoin", "policy":"Sha256Chain",
+    #  "code3":"SCN", "address_version":"\x7d", "magic":"\xde\xad\xba\xbe"},
+    # {"chain":"ScTestnet", "policy":"Sha256Chain",
+    #  "code3":"SC0", "address_version":"\x6f", "magic":"\xca\xfe\xba\xbe"},
+    # {"chain":"Worldcoin", "policy":"Sha256Chain",
+    #  "code3":"WDC", "address_version":"\x49", "magic":"\xfb\xc0\xb6\xdb"},
     {"chain":"NovaCoin"},
     {"chain":"CryptoCash"},
     {"chain":"Anoncoin", "policy":"Sha256Chain",
      "code3":"ANC", "address_version":"\x17", "magic":"\xFA\xCA\xBA\xDA" },
     {"chain":"Hirocoin"},
+    {"chain":"ChainCoin"},
     {"chain":"Bitleu"},
     {"chain":"Maxcoin"},
     #{"chain":"",
@@ -133,19 +134,19 @@ class DataStore(object):
         args.datadir names Bitcoin data directories containing
         blk0001.dat to scan for new blocks.
         """
-        if args.datadir is None:
-            args.datadir = util.determine_db_dir()
-        if isinstance(args.datadir, str):
-            args.datadir = [args.datadir]
+        if args.get('datadir') is None:
+            args['datadir'] = util.determine_db_dir()
+        if isinstance(args.get('datadir'), str):
+            args['datadir'] = [args.get('datadir')]
 
         store.args = args
         store.log = logging.getLogger(__name__)
 
         store.rpclog = logging.getLogger(__name__ + ".rpc")
-        if not args.log_rpc:
+        if not args.get('log_rpc'):
             store.rpclog.setLevel(logging.ERROR)
 
-        if args.dbtype is None:
+        if args.get('dbtype') is None:
             store.log.warn("dbtype not configured, see abe.conf for examples");
             store.dbmodule = None
             store.config = CONFIG_DEFAULTS.copy()
@@ -153,14 +154,14 @@ class DataStore(object):
             store.use_firstbits = CONFIG_DEFAULTS['use_firstbits']
             store._sql = None
             return
-        store.dbmodule = __import__(args.dbtype)
+        store.dbmodule = __import__(args.get('dbtype'))
 
         sql_args = lambda: 1
         sql_args.module = store.dbmodule
-        sql_args.connect_args = args.connect_args
-        sql_args.binary_type = args.binary_type
-        sql_args.int_type = args.int_type
-        sql_args.log_sql = args.log_sql
+        sql_args.connect_args = args.get('connect_args')
+        sql_args.binary_type = args.get('binary_type')
+        sql_args.int_type = args.get('int_type')
+        sql_args.log_sql = args.get('log_sql')
         sql_args.prefix = "abe_"
         sql_args.config = {}
         store.sql_args = sql_args
@@ -173,7 +174,7 @@ class DataStore(object):
         store.config = store._read_config()
 
         if store.config is None:
-            store.keep_scriptsig = args.keep_scriptsig
+            store.keep_scriptsig = args.get('keep_scriptsig')
         elif 'keep_scriptsig' in store.config:
             store.keep_scriptsig = store.config.get('keep_scriptsig') == "true"
         else:
@@ -188,7 +189,7 @@ class DataStore(object):
 
             if store.config['schema_version'] == SCHEMA_VERSION:
                 pass
-            elif args.upgrade:
+            elif args.get('upgrade'):
                 import upgrade
                 upgrade.upgrade_schema(store)
             else:
@@ -198,13 +199,13 @@ class DataStore(object):
                     % (store.config['schema_version'], SCHEMA_VERSION))
         store._sql.auto_reconnect = True
 
-        if args.rescan:
+        if args.get('rescan'):
             store.sql("UPDATE datadir SET blkfile_number=1, blkfile_offset=0")
 
         store._init_datadirs()
         store.init_chains()
 
-        store.commit_bytes = args.commit_bytes
+        store.commit_bytes = args.get('commit_bytes')
         if store.commit_bytes is None:
             store.commit_bytes = 0  # Commit whenever possible.
         else:
@@ -213,14 +214,14 @@ class DataStore(object):
 
         store.use_firstbits = (store.config['use_firstbits'] == "true")
 
-        for hex_tx in args.import_tx:
+        for hex_tx in args.get('import_tx'):
             chain_name = None
             if isinstance(hex_tx, dict):
                 chain_name = hex_tx.get("chain")
                 hex_tx = hex_tx.get("tx")
             store.maybe_import_binary_tx(chain_name, str(hex_tx).decode('hex'))
 
-        store.default_loader = args.default_loader
+        store.default_loader = args.get('default_loader')
 
         store.commit()
 
@@ -330,7 +331,7 @@ class DataStore(object):
 
     def _init_datadirs(store):
         """Parse store.args.datadir, create store.datadirs."""
-        if store.args.datadir == []:
+        if store.args.get('datadir') == []:
             store.datadirs = []
             return
 
@@ -352,7 +353,7 @@ class DataStore(object):
 
         # By default, scan every dir we know.  This doesn't happen in
         # practise, because abe.py sets ~/.bitcoin as default datadir.
-        if store.args.datadir is None:
+        if store.args.get('datadir') is None:
             store.datadirs = datadirs.values()
             return
 
@@ -363,7 +364,7 @@ class DataStore(object):
             return None if row is None else int(row[0])
 
         store.datadirs = []
-        for dircfg in store.args.datadir:
+        for dircfg in store.args.get('datadir'):
             loader = None
             conf = None
 
@@ -458,10 +459,10 @@ class DataStore(object):
         store.chains_by.magic = {}
 
         # Legacy config option.
-        no_bit8_chains = store.args.ignore_bit8_chains or []
+        no_bit8_chains = store.args.get('ignore_bit8_chains') or []
         if isinstance(no_bit8_chains, str):
             no_bit8_chains = [no_bit8_chains]
-
+        import sys
         for chain_id, magic, chain_name, chain_code3, address_version, script_addr_vers, \
                 chain_policy, chain_decimals in \
                 store.selectall("""
@@ -469,16 +470,28 @@ class DataStore(object):
                            chain_address_version, chain_script_addr_vers, chain_policy, chain_decimals
                       FROM chain
                 """):
-            chain = Chain.create(
-                id              = int(chain_id),
-                magic           = store.binout(magic),
-                name            = unicode(chain_name),
-                code3           = chain_code3 and unicode(chain_code3),
-                address_version = store.binout(address_version),
-                script_addr_vers = store.binout(script_addr_vers),
-                policy          = unicode(chain_policy),
-                decimals        = None if chain_decimals is None else \
-                    int(chain_decimals))
+			if sys.version < 3:
+		        chain = Chain.create(
+		            id              = int(chain_id),
+		            magic           = store.binout(magic),
+		            name            = unicode(chain_name),
+		            code3           = chain_code3 and unicode(chain_code3),
+		            address_version = store.binout(address_version),
+		            script_addr_vers = store.binout(script_addr_vers),
+		            policy          = unicode(chain_policy),
+		            decimals        = None if chain_decimals is None else \
+		                int(chain_decimals))
+            else:
+		        chain = Chain.create(
+		            id              = int(chain_id),
+		            magic           = store.binout(magic),
+		            name            = chain_name.encode('utf-8'),
+		            code3           = chain_code3,
+		            address_version = store.binout(address_version),
+		            script_addr_vers = store.binout(script_addr_vers),
+		            policy          = chain_policy,
+		            decimals        = None if chain_decimals is None else \
+		                int(chain_decimals))
 
             # Legacy config option.
             if chain.name in no_bit8_chains and \
@@ -487,7 +500,10 @@ class DataStore(object):
 
             store.chains_by.id[chain.id] = chain
             store.chains_by.name[chain.name] = chain
-            store.chains_by.magic[bytes(chain.magic)] = chain
+            if sys.version < 3:
+                store.chains_by.magic[bytes(chain.magic)] = chain
+            else:
+                store.chains_by.magic[chain.magic] = chain
 
     def get_chain_by_id(store, chain_id):
         return store.chains_by.id[int(chain_id)]
@@ -843,7 +859,7 @@ store._ddl['txout_approx'],
             INSERT INTO pubkey (pubkey_id, pubkey_hash) VALUES (?, ?)""",
                   (NULL_PUBKEY_ID, store.binin(NULL_PUBKEY_HASH)))
 
-        if store.args.use_firstbits:
+        if store.args.get('use_firstbits') is not None:
             store.config['use_firstbits'] = "true"
             store.ddl(
                 """CREATE TABLE abe_firstbits (
@@ -862,7 +878,7 @@ store._ddl['txout_approx'],
             store.config['use_firstbits'] = "false"
 
         store.config['keep_scriptsig'] = \
-            "true" if store.args.keep_scriptsig else "false"
+            "true" if store.args.get('keep_scriptsig', False) else "false"
 
         store.save_config()
         store.commit()
@@ -2521,7 +2537,7 @@ store._ddl['txout_approx'],
 
                 store.flush()
 
-            except Exception, e:
+            except Exception as e:
                 store.log.exception("Failed to catch up %s", dircfg)
                 store.rollback()
 
@@ -2546,7 +2562,7 @@ store._ddl['txout_approx'],
                          else (line.strip(), True)
                          for line in open(conffile)
                          if line != "" and line[0] not in "#\r\n"])
-        except Exception, e:
+        except Exception as e:
             store.log.debug("failed to load %s: %s", conffile, e)
             return False
 
@@ -2569,7 +2585,7 @@ store._ddl['txout_approx'],
         def get_blockhash(height):
             try:
                 return rpc("getblockhash", height)
-            except util.JsonrpcException, e:
+            except util.JsonrpcException as e:
                 if e.code == -1:  # Block number out of range.
                     return None
                 raise
@@ -2584,7 +2600,7 @@ store._ddl['txout_approx'],
             try:
                 rpc_tx_hex = rpc("getrawtransaction", rpc_tx_hash)
 
-            except util.JsonrpcException, e:
+            except util.JsonrpcException as e:
                 if e.code != -5:  # -5: transaction not in index.
                     raise
                 if height != 0:
@@ -2618,9 +2634,9 @@ store._ddl['txout_approx'],
             # bitcoind connectivity.
             try:
                 next_hash = get_blockhash(height)
-            except util.JsonrpcException, e:
+            except util.JsonrpcException as e:
                 raise
-            except Exception, e:
+            except Exception as e:
                 # Connectivity failure.
                 store.log.debug("RPC failed: %s", e)
                 return False
@@ -2705,11 +2721,11 @@ store._ddl['txout_approx'],
                     store.log.info("mempool tx %d", tx_id)
                     store.imported_bytes(tx['size'])
 
-        except util.JsonrpcMethodNotFound, e:
+        except util.JsonrpcMethodNotFound as e:
             store.log.debug("bitcoind %s not supported", e.method)
             return False
 
-        except InvalidBlock, e:
+        except InvalidBlock as e:
             store.log.debug("RPC data not understood: %s", e)
             return False
 
@@ -2727,7 +2743,7 @@ store._ddl['txout_approx'],
 
             try:
                 file = open(blkfile['name'], "rb")
-            except IOError, e:
+            except IOError as e:
                 # Early bitcoind used blk0001.dat to blk9999.dat.
                 # Now it uses blocks/blk00000.dat to blocks/blk99999.dat.
                 # Abe starts by assuming the former scheme.  If we don't
@@ -2760,12 +2776,12 @@ store._ddl['txout_approx'],
         def try_close_file(ds):
             try:
                 ds.close_file()
-            except Exception, e:
+            except Exception as e:
                 store.log.info("BCDataStream: close_file: %s", e)
 
         try:
             blkfile = open_blkfile(dircfg['blkfile_number'])
-        except IOError, e:
+        except IOError as e:
             store.log.warning("Skipping datadir %s: %s", dircfg['dirname'], e)
             return
 
@@ -2785,12 +2801,12 @@ store._ddl['txout_approx'],
                 # Try another file.
                 try:
                     next_blkfile = open_blkfile(dircfg['blkfile_number'] + 1)
-                except IOError, e:
+                except IOError as e:
                     if e.errno != errno.ENOENT:
                         raise
                     # No more block files.
                     return
-                except Exception, e:
+                except Exception as e:
                     if getattr(e, 'errno', None) == errno.ENOMEM:
                         # Assume 32-bit address space exhaustion.
                         store.log.warning(

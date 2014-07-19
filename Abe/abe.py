@@ -28,14 +28,14 @@ import math
 import logging
 import json
 
-import version
-import DataStore
-import readconf
+from . import version
+from . import DataStore
+from . import readconf
 
 # bitcointools -- modified deserialize.py to return raw transaction
-import deserialize
-import util  # Added functions.
-import base58
+from . import deserialize
+from . import util  # Added functions.
+from . import base58
 
 __version__ = version.__version__
 
@@ -199,7 +199,7 @@ MAX_UNSPENT_ADDRESSES = 200
 
 def make_store(args):
     store = DataStore.new(args)
-    if (not args.no_load):
+    if (not args.get('no_load')):
         store.catch_up()
     return store
 
@@ -220,26 +220,26 @@ class Abe:
     def __init__(abe, store, args):
         abe.store = store
         abe.args = args
-        abe.htdocs = args.document_root or find_htdocs()
-        abe.static_path = '' if args.static_path is None else args.static_path
-        abe.template_vars = args.template_vars.copy()
+        abe.htdocs = args.get('document_root') or find_htdocs()
+        abe.static_path = '' if args.get('static_path') is None else args.get('static_path')
+        abe.template_vars = args.get('template_vars').copy()
         abe.template_vars['STATIC_PATH'] = (
             abe.template_vars.get('STATIC_PATH', abe.static_path))
-        abe.template = flatten(args.template)
-        abe.debug = args.debug
+        abe.template = flatten(args.get('template'))
+        abe.debug = args.get('debug')
         abe.log = logging.getLogger(__name__)
         abe.log.info('Abe initialized.')
         abe.home = str(abe.template_vars.get("HOMEPAGE", DEFAULT_HOMEPAGE))
         abe.template_vars['download'] = (abe.template_vars.get('download', ''))  # legacy
         abe.base_url = args.base_url
         abe.address_history_rows_max = int(
-            args.address_history_rows_max or 1000)
+            args.get('address_history_rows_max') or 1000)
 
-        if args.shortlink_type is None:
+        if args.get('shortlink_type') is None:
             abe.shortlink_type = ("firstbits" if store.use_firstbits else
                                   "non-firstbits")
         else:
-            abe.shortlink_type = args.shortlink_type
+            abe.shortlink_type = args.get('shortlink_type')
             if abe.shortlink_type != "firstbits":
                 abe.shortlink_type = int(abe.shortlink_type)
                 if abe.shortlink_type < 2:
@@ -252,6 +252,9 @@ class Abe:
             abe.shortlink_type = 10
 
     def __call__(abe, env, start_response):
+        try:
+            from urllib import parse as urlparse
+        except ImportError:
         import urlparse
 
         page = {
@@ -284,7 +287,7 @@ class Abe:
             if handler is None:
                 return abe.serve_static(cmd + env['PATH_INFO'], start_response)
 
-            if (not abe.args.no_load):
+            if (not abe.args.get('no_load')):
                 # Always be up-to-date, even if we means having to wait
                 # for a response!  XXX Could use threads, timers, or a
                 # cron job.
@@ -1992,7 +1995,7 @@ def decode_script(script):
         return ''
     try:
         return deserialize.decode_script(script)
-    except KeyError, e:
+    except KeyError as e:
         return 'Nonstandard script'
 
 def b58hex(b58):
@@ -2029,7 +2032,7 @@ def flatten(l):
         return ''.join(map(flatten, l))
     if l is None:
         raise Exception('NoneType in HTML conversion')
-    if isinstance(l, unicode):
+    if isinstance(l, str):
         return l
     return str(l)
 
@@ -2047,24 +2050,24 @@ def serve(store):
     args = store.args
     abe = Abe(store, args)
 
-    if args.query is not None:
+    if args.get('query') is not None:
         def start_response(status, headers):
             pass
         import urlparse
-        parsed = urlparse.urlparse(args.query)
-        print abe({
+        parsed = urlparse.urlparse(args.get('query'))
+        print(abe({
                 'SCRIPT_NAME':  '',
                 'PATH_INFO':    parsed.path,
                 'QUERY_STRING': parsed.query
-                }, start_response)
-    elif args.host or args.port:
+                }, start_response))
+    elif args.get('host') or args.get('port'):
         # HTTP server.
-        if args.host is None:
-            args.host = "localhost"
+        if args.get('host') is None:
+            args['host'] = "localhost"
         from wsgiref.simple_server import make_server
-        port = int(args.port or 80)
-        httpd = make_server(args.host, port, abe)
-        abe.log.warning("Listening on http://%s:%d", args.host, port)
+        port = int(args.get('port') or 80)
+        httpd = make_server(args.get('host'), port, abe)
+        abe.log.warning("Listening on http://%s:%d", args.get('host'), port)
         # httpd.shutdown() sometimes hangs, so don't call it.  XXX
         httpd.serve_forever()
     else:
@@ -2076,7 +2079,7 @@ def serve(store):
         # we arrange the following.  FastCGI script passes its pid as
         # --watch-pid=PID and enters an infinite loop.  We check every
         # minute whether it has terminated and exit when it has.
-        wpid = args.watch_pid
+        wpid = args.get('watch_pid')
         if wpid is not None:
             wpid = int(wpid)
             interval = 60.0  # XXX should be configurable.
@@ -2099,7 +2102,7 @@ def process_is_alive(pid):
     try:
         os.kill(pid, 0)
         return True
-    except OSError, e:
+    except OSError as e:
         if e.errno == errno.EPERM:
             return True  # process exists, but we can't send it signals.
         if e.errno == errno.ESRCH:
@@ -2226,11 +2229,11 @@ All configuration variables may be given as command arguments.
 See abe.conf for commented examples.""")
         return 0
     elif argv[0] in ('-v', '--version'):
-        print ABE_APPNAME, ABE_VERSION
-        print "Schema version", DataStore.SCHEMA_VERSION
+        print(ABE_APPNAME, ABE_VERSION)
+        print("Schema version", DataStore.SCHEMA_VERSION)
         return 0
     elif argv[0] == '--print-htdocs-directory':
-        print find_htdocs()
+        print(find_htdocs())
         return 0
     else:
         sys.stderr.write(
@@ -2241,14 +2244,14 @@ See abe.conf for commented examples.""")
 
     logging.basicConfig(
         stream=sys.stdout,
-        level = logging.DEBUG if args.query is None else logging.ERROR,
+        level = logging.DEBUG if args.get('query') is None else logging.ERROR,
         format=DEFAULT_LOG_FORMAT)
-    if args.logging is not None:
+    if args.get('logging') is not None:
         import logging.config as logging_config
-        logging_config.dictConfig(args.logging)
+        logging_config.dictConfig(args.get('logging'))
 
     store = make_store(args)
-    if (not args.no_serve):
+    if not args.get('no_serve', False):
         serve(store)
     return 0
 

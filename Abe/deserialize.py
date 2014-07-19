@@ -19,13 +19,13 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-from BCDataStream import *
-from enumeration import Enumeration
-from base58 import public_key_to_bc_address, hash_160_to_bc_address
+from .BCDataStream import *
+from .enumeration import Enumeration
+from .base58 import public_key_to_bc_address, hash_160_to_bc_address
 import logging
 import socket
 import time
-from util import short_hex, long_hex
+from .util import short_hex, long_hex
 import struct
 
 def parse_CAddress(vds):

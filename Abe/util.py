@@ -20,13 +20,13 @@
 #
 
 import re
-import base58
+from . import base58
 import Crypto.Hash.SHA256 as SHA256
 
 try:
     import Crypto.Hash.RIPEMD160 as RIPEMD160
 except Exception:
-    import ripemd_via_hashlib as RIPEMD160
+    from . import ripemd_via_hashlib as RIPEMD160
 
 # This function comes from bitcointools, bct-LICENSE.txt.
 def determine_db_dir():
@@ -143,11 +143,44 @@ class JsonrpcException(Exception):
 class JsonrpcMethodNotFound(JsonrpcException):
     pass
 
-def jsonrpc(url, method, *params):
+
+def jsonrpc(url , method, *params):
+    import sys
+    if sys._version_ == 3
+		return jsonrpcpy3(url, method, params)
+    else:
+		return jsonrpcpy2(url, method, params)
+
+def jsonrpcpy2(url, method, *params):
     import json, urllib
     postdata = json.dumps({"jsonrpc": "2.0",
                            "method": method, "params": params, "id": "x"})
     respdata = urllib.urlopen(url, postdata).read()
+    resp = json.loads(respdata)
+    if resp.get('error') is not None:
+        if resp['error']['code'] == -32601:
+            raise JsonrpcMethodNotFound(resp['error'], method, params)
+        raise JsonrpcException(resp['error'], method, params)
+    return resp['result']
+
+def jsonrpcpy3(url, method, *params):
+    import json
+    try:
+        from urllib.request import urlopen
+    except ImportError:
+        from urllib import urlopen
+    postdata = json.dumps({"jsonrpc": "2.0", "method": method, "params": params, "id": "0"})
+    print("Postdata: {} for {}".format(postdata, url))
+    try:
+        respdata = urlopen(url, postdata.encode('utf-8')).read()
+    except Exception as err:
+        print('err:', err)
+        print('repr(err):', repr(err))
+        print('err.reason:', err.reason)
+        print('repr(err.reason):', repr(err.reason))
+        print("Error {}".format(err))
+        raise Exception(err)
+    assert respdata is not None
     resp = json.loads(respdata)
     if resp.get('error') is not None:
         if resp['error']['code'] == -32601:
@@ -179,7 +212,7 @@ class CmdLine(object):
 
         args, argv = readconf.parse_argv(self.argv, self.conf, strict=False)
         if argv and argv[0] in ('-h', '--help'):
-            print self.usage()
+            print(self.usage())
             return None, []
 
         logging.basicConfig(

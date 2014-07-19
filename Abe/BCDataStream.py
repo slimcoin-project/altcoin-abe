@@ -21,6 +21,9 @@
 # Workalike python implementation of Bitcoin's CDataStream class.
 #
 import struct
+try:
+  from io import StringIO
+except ImportError:
 import StringIO
 import mmap
 
