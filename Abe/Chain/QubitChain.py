@@ -27,40 +27,10 @@ class QubitChain(BaseChain):
 
     def __init__(chain, **kwargs):
         chain.name = 'QubitChain'
-        # chain.code3 = 'Q2C'
-        # chain.address_version = '\x26'
-        # chain.script_addr_vers = '\x09'
-        # chain.magic = '\xfe\xa5\x03\xdd'
         super(QubitChain, chain).__init__(**kwargs)
 
     def block_header_hash(chain, header):
         import qubit_hash
         return qubit_hash.getPoWHash(header)
 
-    def ds_parse_transaction(chain, ds):
-        def wrapped_ds_parse_transaction(vds, has_nTime=False):
-            d = {}
-            start_pos = vds.read_cursor
-            d['version'] = vds.read_int32()
-            if has_nTime:
-                d['nTime'] = vds.read_uint32()
-            n_vin = vds.read_compact_size()
-            d['txIn'] = []
-            for i in xrange(n_vin):
-                d['txIn'].append(deserialize.parse_TxIn(vds))
-            n_vout = vds.read_compact_size()
-            d['txOut'] = []
-            for i in xrange(n_vout):
-                d['txOut'].append(deserialize.parse_TxOut(vds))
-            d['lockTime'] = vds.read_uint32()
-            if d['version'] > 1:
-                d['tx-comment'] = vds.read_string()
-            d['__data__'] = vds.input[start_pos:vds.read_cursor]
-            return d
-        return wrapped_ds_parse_transaction(ds, has_nTime=False)
-
-    # datadir_conf_file_name = 'qubitcoin.conf'
-    # datadir_rpcport = 7799
-    # datadir_p2pport = 7788
-    # start_time = 1394480376
 

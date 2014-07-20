@@ -37,7 +37,9 @@ from . import deserialize
 from . import util  # Added functions.
 from . import base58
 
-__version__ = version.__version__
+# __version__ = version.__version__
+__version__ = '0.8pre'
+
 
 ABE_APPNAME = "Abe"
 ABE_VERSION = __version__
@@ -231,7 +233,7 @@ class Abe:
         abe.log.info('Abe initialized.')
         abe.home = str(abe.template_vars.get("HOMEPAGE", DEFAULT_HOMEPAGE))
         abe.template_vars['download'] = (abe.template_vars.get('download', ''))  # legacy
-        abe.base_url = args.base_url
+        abe.base_url = args.get('base_url')
         abe.address_history_rows_max = int(
             args.get('address_history_rows_max') or 1000)
 
@@ -255,7 +257,7 @@ class Abe:
         try:
             from urllib import parse as urlparse
         except ImportError:
-        import urlparse
+            import urlparse
 
         page = {
             "status": '200 OK',
@@ -298,7 +300,7 @@ class Abe:
             status = '404 Not Found'
             page['body'] = abe.page_error(page,'Page not found')
             
-        except NoSuchChainError, e:
+        except NoSuchChainError as e:
             page['body'] += abe.page_error(page,'That chain not found')
         except Redirect:
             return redirect(page)
@@ -319,7 +321,11 @@ class Abe:
         tvars['body'] = flatten(page['body'])
 
         content = page['template'] % tvars
-        if isinstance(content, unicode):
+        import sys
+        if sys.version < '3':
+            if isinstance(content, unicode):
+                content = content.encode('UTF-8')
+        else:
             content = content.encode('UTF-8')
         return content
 
@@ -629,11 +635,11 @@ class Abe:
         body += ['</tbody></table>']
         body += ['<table class="table table-striped"><tbody><tr><th colspan="2">Advanced Summary</th></tr>']
         if b['chain_satoshis'] and (b['satoshi_seconds'] is not None) :
-            body += ['<tr><td>Average Coin Age</td><td>',(b['satoshi_seconds'] / 86400.0 / b['chain_satoshis']),' days']
+            body += ['<tr><td>Average Coin Age</td><td>',(b['satoshi_seconds'] / 86400.0 / min(1, b['chain_satoshis'])),' days']
         if b['satoshis_destroyed'] is not None:
             body += ['<tr><td>Coin-days Destroyed</td><td>',format_satoshis(b['satoshis_destroyed'] / 86400.0, chain),'</td></tr>']
-        if b['chain_satoshi_seconds'] is not None:
-            body += ['<tr><td>Cumulative Coin-days Destroyed</td><td>',(100 * (1 - float(b['satoshi_seconds']) / b['chain_satoshi_seconds']))]
+        if b['chain_satoshi_seconds'] is not None and int(b['chain_satoshi_seconds']) > 0 :
+            body += ['<tr><td>Cumulative Coin-days Destroyed</td><td>',(100 * (1 - float(b['satoshi_seconds']) / min(1, b['chain_satoshi_seconds'])))]
         body += ['<tr><td>Short Link</td><td>', abe.short_link(page, 'b/' + block_shortlink(b['hash'])), '</td></tr>']
         body += ['</tbody></table></div>']
 

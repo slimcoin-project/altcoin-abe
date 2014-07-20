@@ -19,6 +19,7 @@
 # Misc util routines
 #
 
+import sys
 import re
 from . import base58
 import Crypto.Hash.SHA256 as SHA256
@@ -144,13 +145,6 @@ class JsonrpcMethodNotFound(JsonrpcException):
     pass
 
 
-def jsonrpc(url , method, *params):
-    import sys
-    if sys._version_ == 3
-		return jsonrpcpy3(url, method, params)
-    else:
-		return jsonrpcpy2(url, method, params)
-
 def jsonrpcpy2(url, method, *params):
     import json, urllib
     postdata = json.dumps({"jsonrpc": "2.0",
@@ -187,6 +181,8 @@ def jsonrpcpy3(url, method, *params):
             raise JsonrpcMethodNotFound(resp['error'], method, params)
         raise JsonrpcException(resp['error'], method, params)
     return resp['result']
+
+jsonrpc = jsonrpcpy2 if sys.version < '3' else jsonrpcpy3
 
 def str_to_ds(s):
     import BCDataStream

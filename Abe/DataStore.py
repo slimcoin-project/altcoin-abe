@@ -470,28 +470,16 @@ class DataStore(object):
                            chain_address_version, chain_script_addr_vers, chain_policy, chain_decimals
                       FROM chain
                 """):
-			if sys.version < 3:
-		        chain = Chain.create(
-		            id              = int(chain_id),
-		            magic           = store.binout(magic),
-		            name            = unicode(chain_name),
-		            code3           = chain_code3 and unicode(chain_code3),
-		            address_version = store.binout(address_version),
-		            script_addr_vers = store.binout(script_addr_vers),
-		            policy          = unicode(chain_policy),
-		            decimals        = None if chain_decimals is None else \
-		                int(chain_decimals))
-            else:
-		        chain = Chain.create(
-		            id              = int(chain_id),
-		            magic           = store.binout(magic),
-		            name            = chain_name.encode('utf-8'),
-		            code3           = chain_code3,
-		            address_version = store.binout(address_version),
-		            script_addr_vers = store.binout(script_addr_vers),
-		            policy          = chain_policy,
-		            decimals        = None if chain_decimals is None else \
-		                int(chain_decimals))
+            chain = Chain.create(
+                id              = int(chain_id),
+                magic           = store.binout(magic),
+                name            = chain_name.encode('utf-8'),
+                code3           = chain_code3 and chain_code3.encode('utf-8'),
+                address_version = store.binout(address_version),
+                script_addr_vers = store.binout(script_addr_vers),
+                policy          = chain_policy and chain_policy.encode('utf-8'),
+                decimals        = None if chain_decimals is None else \
+                    int(chain_decimals))
 
             # Legacy config option.
             if chain.name in no_bit8_chains and \
