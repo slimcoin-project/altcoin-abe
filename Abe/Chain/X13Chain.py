@@ -20,6 +20,7 @@ class X13Chain(BaseChain):
     """
     A blockchain that hashes block headers using the X13 algorithm.
     The current implementation requires the x13_hash module.
+    https://github.com/mindfox/x13-hash
     """
 
     def block_header_hash(chain, header):
