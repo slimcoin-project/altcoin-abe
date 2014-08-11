@@ -988,7 +988,7 @@ class Abe:
             '<input type="submit" class="btn btn-primary search_button" value="Search" />\n'
             '<p>Address or hash search requires at least the first ',
             HASH_PREFIX_MIN, ' characters.</p></form>\n']
-    
+
     def page_error(abe, page, message):
         if message=='':
             message='Page Not found'
@@ -1397,7 +1397,7 @@ class Abe:
             return 'Shows the greatest block height in CHAIN.\n' \
                 '/chain/CHAIN/q/getblockcount\n'
         return abe.get_max_block_height(chain)
-        
+
     def q_get_blocks_data(abe, page, chain):
         """shows the latest blocks data in json format for datatable in chain page"""
         page['content_type'] = 'application/json'
@@ -1481,7 +1481,7 @@ class Abe:
             return ['{"sEcho":',sEcho_val,',"iTotalRecords":',total_number_of_blocks,',"iTotalDisplayRecords":',total_number_of_blocks,',"aaData":',json.dumps(latest_blocks),'}']
         else:
             return ['error']
-    
+
     def q_get_latest_transactions(abe,page,chain):
         if chain is None:
             return 'Shows latest 10 transactions in CHAIN.\n' \
@@ -1497,7 +1497,7 @@ class Abe:
             tx_id, tx_hash, tx_size = (row[0], abe.store.hashout_hex(row[1]), None if row[2] is None else int(row[2]))
             output.append([tx_hash[:14],tx_hash,tx_size]);
         return ['{"sEcho":1,"iTotalRecords":10,"iTotalDisplayRecords":10,"aaData":',json.dumps(output),'}']
-            
+
     def q_getdifficulty(abe, page, chain):
         """shows the last solved block's difficulty."""
         if chain is None:
