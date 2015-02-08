@@ -14,22 +14,17 @@
 # License along with this program.  If not, see
 # <http://www.gnu.org/licenses/agpl.html>.
 
-from . import BaseChain
-from .. import deserialize
+from .X11Chain import X11Chain
 
-class NmcAuxPowChain(BaseChain):
-    """
-    A blockchain that represents merge-mining proof-of-work in an "AuxPow" structure as does Namecoin.
-    """
+class Darkcoin(X11Chain):
     def __init__(chain, **kwargs):
-        BaseChain.__init__(chain, **kwargs)
+        chain.name = 'Darkcoin'
+        chain.code3 = 'DRK'
+        chain.address_version = '\x4c'
+        chain.script_addr_vers = '\x05'
+        chain.magic = '\xbf\x0c\x6b\xbd'
+        X11Chain.__init__(chain, **kwargs)
 
-    def ds_parse_block_header(chain, ds):
-        d = BaseChain.ds_parse_block_header(chain, ds)
-        if d['version'] & (1 << 8):
-            d['auxpow'] = deserialize.parse_AuxPow(ds)
-        return d
-
-    def has_feature(chain, feature):
-        return feature == 'block_version_bit8_merge_mine' \
-            or BaseChain.has_feature(chain, feature)
+    datadir_conf_file_name = 'darkcoin.conf'
+    datadir_rpcport = 9998
+    datadir_p2pport = 9999

@@ -14,22 +14,17 @@
 # License along with this program.  If not, see
 # <http://www.gnu.org/licenses/agpl.html>.
 
-from . import BaseChain
-from .. import deserialize
+from .Sha256Chain import Sha256Chain
 
-class NmcAuxPowChain(BaseChain):
-    """
-    A blockchain that represents merge-mining proof-of-work in an "AuxPow" structure as does Namecoin.
-    """
+class Unbreakablecoin(Sha256Chain):
     def __init__(chain, **kwargs):
-        BaseChain.__init__(chain, **kwargs)
+        chain.name = 'Unbreakablecoin'
+        chain.code3 = 'UNB'
+        chain.address_version = '\x00'
+        chain.script_addr_vers = '\x05'
+        chain.magic = '\x83\x33\x07\xb1'
+        Sha256Chain.__init__(chain, **kwargs)
 
-    def ds_parse_block_header(chain, ds):
-        d = BaseChain.ds_parse_block_header(chain, ds)
-        if d['version'] & (1 << 8):
-            d['auxpow'] = deserialize.parse_AuxPow(ds)
-        return d
-
-    def has_feature(chain, feature):
-        return feature == 'block_version_bit8_merge_mine' \
-            or BaseChain.has_feature(chain, feature)
+    datadir_conf_file_name = 'Unbreakablecoin.conf'
+    datadir_rpcport = 9337
+    datadir_p2pport = 9336

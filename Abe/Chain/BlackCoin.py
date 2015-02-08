@@ -14,22 +14,24 @@
 # License along with this program.  If not, see
 # <http://www.gnu.org/licenses/agpl.html>.
 
-from . import BaseChain
-from .. import deserialize
+from .NvcChain import NvcChain
 
-class NmcAuxPowChain(BaseChain):
-    """
-    A blockchain that represents merge-mining proof-of-work in an "AuxPow" structure as does Namecoin.
-    """
+class BlackCoin(NvcChain):
     def __init__(chain, **kwargs):
-        BaseChain.__init__(chain, **kwargs)
+        chain.name = "BlackCoin"
+        chain.code3 = "BC"
+        chain.address_version = "\x19"
+        chain.script_addr_vers = "\x55"
+        chain.magic = "\x70\x35\x22\x05"
+        NvcChain.__init__(chain, **kwargs)
 
-    def ds_parse_block_header(chain, ds):
-        d = BaseChain.ds_parse_block_header(chain, ds)
-        if d['version'] & (1 << 8):
-            d['auxpow'] = deserialize.parse_AuxPow(ds)
-        return d
+    def block_header_hash(chain, header):
+        b = chain.parse_block_header(header)
+        if (b['version'] > 6):
+            from .. import util
+            return util.double_sha256(header)
+        import ltc_scrypt
+        return ltc_scrypt.getPoWHash(header)
 
-    def has_feature(chain, feature):
-        return feature == 'block_version_bit8_merge_mine' \
-            or BaseChain.has_feature(chain, feature)
+    datadir_conf_file_name = "blackcoin.conf"
+    datadir_rpcport = 15715
