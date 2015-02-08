@@ -16,6 +16,7 @@ Block Explorer, http://blockexplorer.com/.
 Abe draws inspiration from Bitcoin Block Explorer (BBE) and
 BlockChain.info and seeks some level of compatibility with them but
 uses a completely new implementation.
+[![Build Status](https://api.travis-ci.org/gjhiggins/altcoin-abe.svg?branch=minkiz)](https://travis-ci.org/gjhiggins/altcoin-abe)
 
 Installation
 ------------
