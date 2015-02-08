@@ -1,0 +1,4 @@
+pytest
+pycrypto
+pysqlite
+flake8

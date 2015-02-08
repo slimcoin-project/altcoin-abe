@@ -9,7 +9,7 @@ python:
     - 3.4
 
 install:
-    - pip install --use-mirrors --default-timeout 60 flake8 pytest
+    - pip install --use-mirrors --default-timeout 60 -r requirements.txt
     - python setup.py install
 
 before_script:
