@@ -1,0 +1,19 @@
+# http://travis-ci.org/#!/gjhiggins/altcoin-abe
+language: python
+branches:
+  only:
+    - minkiz
+
+python:
+    - 2.7
+    - 3.4
+
+install:
+    - pip install --use-mirrors --default-timeout 60 pytest
+    - python setup.py install
+
+before_script:
+    - flake8 --exclude=Abe --exit-zero abe
+
+script:
+    - py.test
