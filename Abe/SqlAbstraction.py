@@ -78,7 +78,7 @@ class SqlAbstraction(object):
             if x is None:
                 return None
             else:
-                return x.encode('hexh') if sys.version_info[0] < 3 else b2hex(x)
+                return x.encode('hex') if sys.version_info[0] < 3 else b2hex(x)
         def to_hex_rev(x):
             return None if x is None else str(x)[::-1].encode('hex')
         def from_hex_rev(x):
