@@ -213,9 +213,9 @@ class CmdLine(object):
 
         logging.basicConfig(
             stream=sys.stdout, level=logging.DEBUG, format="%(message)s")
-        if args.logging is not None:
+        if args.get('logging') is not None:
             import logging.config as logging_config
-            logging_config.dictConfig(args.logging)
+            logging_config.dictConfig(args.get('logging'))
 
         store = DataStore.new(args)
 

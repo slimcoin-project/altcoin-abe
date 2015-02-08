@@ -1170,14 +1170,15 @@ store._ddl['txout_approx'],
             raise
 
         # List the block's transactions in block_tx.
-        for tx_pos in xrange(len(b['transactions'])):
+        for cnt, tx_pos in enumerate(xrange(len(b['transactions']))):
             tx = b['transactions'][tx_pos]
             store.sql("""
                 INSERT INTO block_tx
                     (block_id, tx_id, tx_pos)
                 VALUES (?, ?, ?)""",
                       (block_id, tx['tx_id'], tx_pos))
-            store.log.info("block_tx %d %d", block_id, tx['tx_id'])
+            if cnt % 1000 == 0:
+                store.log.info("block_tx %d %d", block_id, tx['tx_id'])
 
         if b['height'] is not None:
             store._populate_block_txin(block_id)
