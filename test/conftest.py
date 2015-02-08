@@ -18,7 +18,7 @@
 
 from __future__ import print_function
 import pytest
-import db
+from . import db
 
 @pytest.fixture(scope="session", params=db.testdb_params())
 def db_server(request):

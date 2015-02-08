@@ -17,7 +17,12 @@
 from .. import deserialize, BCDataStream, util
 from ..deserialize import opcodes
 
+
 def create(policy, **kwargs):
+    try:
+        policy = policy.decode('utf-8')
+    except:
+        pass
     mod = __import__(__name__ + '.' + policy, fromlist=[policy])
     cls = getattr(mod, policy)
     return cls(policy=policy, **kwargs)

@@ -22,6 +22,7 @@
 # 3. Code to load data by scanning blockfiles or using JSON-RPC.
 
 import os
+import sys
 import re
 import errno
 import logging
@@ -491,7 +492,7 @@ class DataStore(object):
 
             store.chains_by.id[chain.id] = chain
             store.chains_by.name[chain.name] = chain
-            if sys.version < 3:
+            if sys.version_info[0] < 3:
                 store.chains_by.magic[bytes(chain.magic)] = chain
             else:
                 store.chains_by.magic[chain.magic] = chain
@@ -2864,7 +2865,7 @@ store._ddl['txout_approx'],
             if chain is None:
                 store.log.warning(
                     "Chain not found for magic number %s in block file %s at"
-                    " offset %d.", magic.encode('hex'), filename, offset)
+                    " offset %d.", magic.encode('hex') if sys.version_info[0] < 3 else magic, filename, offset)
 
                 not_magic = magic
                 # Read this file's initial magic number.

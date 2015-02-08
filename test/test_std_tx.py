@@ -23,8 +23,8 @@ import json
 import tempfile
 import py.path
 
-from db import testdb
-import data
+from .db import testdb
+from . import data
 import Abe.Chain
 from Abe.deserialize import opcodes
 

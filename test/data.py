@@ -1,4 +1,4 @@
-import datagen
+from . import datagen
 import Abe.Chain
 from Abe.util import hex2b
 
