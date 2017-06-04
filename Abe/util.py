@@ -213,10 +213,16 @@ class CmdLine(object):
 
         logging.basicConfig(
             stream=sys.stdout, level=logging.DEBUG, format="%(message)s")
-        if args.logging is not None:
+        if args.get('logging') is not None:
             import logging.config as logging_config
-            logging_config.dictConfig(args.logging)
+            logging_config.dictConfig(args.get('logging'))
 
         store = DataStore.new(args)
 
         return store, argv
+
+# Abstract hex-binary conversions for eventual porting to Python 3.
+def hex2b(s):
+    return s.decode('hex')
+def b2hex(b):
+    return b.encode('hex')

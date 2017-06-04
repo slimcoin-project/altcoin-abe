@@ -17,11 +17,13 @@
 from .. import deserialize, BCDataStream, util
 from ..deserialize import opcodes
 
+
 def create(policy, **kwargs):
-    mod = __import__(__name__ + '.' + policy, fromlist=[policy])
+    # FAILS mod = __import__(__name__ + '.' + policy, fromlist=[policy])
+    mod = __import__('Abe.Chain.SlimCoin', fromlist=[policy])
+    policy = "SlimCoin"
     cls = getattr(mod, policy)
     return cls(policy=policy, **kwargs)
-
 
 PUBKEY_HASH_LENGTH = 20
 MAX_MULTISIG_KEYS = 3

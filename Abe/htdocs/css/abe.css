@@ -38,7 +38,7 @@ a:focus{border:none !important;}
 #blocks{border-bottom:1px solid #eaeaea;   }
 /*Data tables*/
 .pagination{ margin:0;}
-div.dataTables_processing{ background:url("../images/ajax-loader.gif") center no-repeat #ffffff;}
+div.dataTables_processing{ /* background:url("../images/ajax-loader.gif") center no-repeat #ffffff; */}
 div.dataTables_length label {float: left;text-align: left;}
 div.dataTables_length select {width: 75px;}
 div.dataTables_filter label {float: right;}

@@ -350,7 +350,12 @@ class SqlAbstraction(object):
     def _fallback_to_lob(sql, fn):
         if sql.config.get('max_varchar') is None:
             return fn
-        max_varchar = int(sql.config['max_varchar'])
+        try:
+            max_varchar = int(sql.config['max_varchar'])
+        except ValueError:
+            max_varchar = int(eval(sql.config['max_varchar']))
+        except:
+            raise Exception("max_varchar failed for {}".format(sql.config['max_varchar']))
 
         if sql.config.get('clob_type') is None:
             return fn

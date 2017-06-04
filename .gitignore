@@ -1,6 +1,8 @@
 *.pyc
+*.so
 abe.sqlite*
 tmpd
 MANIFEST
 build
 dist
+Abe/Chain/unused/
