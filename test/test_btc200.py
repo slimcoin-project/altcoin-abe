@@ -18,7 +18,7 @@
 
 import pytest
 
-from db import testdb
+from .db import testdb
 import os
 import Abe.util
 import Abe.Chain

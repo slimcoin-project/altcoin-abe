@@ -17,7 +17,9 @@
 # <http://www.gnu.org/licenses/agpl.html>.
 
 import re
+import sys
 import logging
+from .util import b2hex, hex2b
 
 NO_CLOB = 'BUG_NO_CLOB'
 STMT_RE = re.compile(r"([^']+)((?:'[^']*')?)")
@@ -73,11 +75,20 @@ class SqlAbstraction(object):
         def to_hex(x):
             return None if x is None else str(x).encode('hex')
         def from_hex(x):
-            return None if x is None else x.decode('hex')
+            if x is None:
+                return None
+            else:
+                return x.encode('hex') if sys.version_info[0] < 3 else b2hex(x)
         def to_hex_rev(x):
             return None if x is None else str(x)[::-1].encode('hex')
         def from_hex_rev(x):
-            return None if x is None else x.decode('hex')[::-1]
+            if sys.version_info[0] > 2:
+                if isinstance(x, bytes):
+                    return x.decode('hex')
+                else:
+                    return x.encode('utf-8').decode('hex')
+            else:
+                return None if x is None else x.decode('hex')[::-1]
 
         val = sql.config.get('binary_type')
 

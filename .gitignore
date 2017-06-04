@@ -6,3 +6,5 @@ MANIFEST
 build
 dist
 Abe/Chain/unused/
+.tox
+*.egg-info

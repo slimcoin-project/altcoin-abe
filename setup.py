@@ -1,13 +1,25 @@
 # from distutils.core import setup
+import sys
 from setuptools import setup, find_packages
-execfile("Abe/version.py")
+
+# Find version. We have to do this because we can't import it in Python 3 until
+# its been automatically converted in the setup process.
+def find_version(filename):
+    import re
+    _version_re = re.compile(r'__version__ = "(.*)"')
+    for line in open(filename):
+        version_match = _version_re.match(line)
+        if version_match:
+            return version_match.group(1)
+
+__version__ = find_version('Abe/version.py')
 
 setup(
     name         = "Abe",
     version      = __version__,
     requires     = ['Crypto.Hash'],
     packages     = ['Abe', 'Abe.Chain'],
-    package_data = {'Abe': ['htdocs/*']},
+    package_data = {'Abe': ['htdocs/*.*', 'htdocs/css/*.*', 'htdocs/fonts/*.*', 'htdocs/images/*.*', 'htdocs/js/*.*']},
     author       = "John Tobey",
     author_email = "jtobey@john-edwin-tobey.org",
     url          = "https://github.com/bitcoin-abe/bitcoin-abe",

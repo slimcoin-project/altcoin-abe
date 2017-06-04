@@ -1493,10 +1493,18 @@ class Abe:
             ORDER BY tx_id DESC
             LIMIT 10
         """)
-        output = []
-        for row in rows:
-            tx_id, tx_hash, tx_size = (row[0], abe.store.hashout_hex(row[1]), None if row[2] is None else int(row[2]))
-            output.append([tx_hash[:14],tx_hash,tx_size]);
+        # output = []
+        # for row in rows:
+        #     tx_id, tx_hash, tx_size = (row[0], abe.store.hashout_hex(row[1]), None if row[2] is None else int(row[2]))
+        #     output.append([tx_hash[:14],tx_hash,tx_size]);
+        # print("Rows {}".format(len(rows)))
+        output = [
+            [
+                str(row[1]).encode('hex')[:14],
+                str(row[1]).encode('hex'),
+                None if row[2] is None else int(row[2])
+                ]
+            for row in rows]
         return ['{"sEcho":1,"iTotalRecords":10,"iTotalDisplayRecords":10,"aaData":',json.dumps(output),'}']
 
     def q_getdifficulty(abe, page, chain):

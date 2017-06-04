@@ -19,6 +19,10 @@ from ..deserialize import opcodes
 
 
 def create(policy, **kwargs):
+    try:
+        policy = policy.decode('utf-8')
+    except:
+        pass
     # FAILS mod = __import__(__name__ + '.' + policy, fromlist=[policy])
     mod = __import__('Abe.Chain.SlimCoin', fromlist=[policy])
     policy = "SlimCoin"

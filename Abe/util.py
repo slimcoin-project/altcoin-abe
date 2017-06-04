@@ -185,7 +185,7 @@ def jsonrpcpy3(url, method, *params):
 jsonrpc = jsonrpcpy2 if sys.version < '3' else jsonrpcpy3
 
 def str_to_ds(s):
-    import BCDataStream
+    from . import BCDataStream
     ds = BCDataStream.BCDataStream()
     ds.write(s)
     return ds
@@ -202,7 +202,10 @@ class CmdLine(object):
         return "Sorry, no help is available."
 
     def init(self):
-        import DataStore, readconf, logging, sys
+        from . import DataStore
+        from . import readconf
+        import logging
+        import sys
         self.conf.update({ "debug": None, "logging": None })
         self.conf.update(DataStore.CONFIG_DEFAULTS)
 
