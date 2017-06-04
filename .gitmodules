@@ -1,0 +1,3 @@
+[submodule "dcrypt-hash"]
+	path = dcrypt-hash
+	url = git@github.com:slimcoin-project/dcrypt-hash.git
